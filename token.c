@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#include "token.h"
+
 char **token_array(const char *input_string, size_t input_length, char delimiter) {
     if (!input_string || input_length == 0)
         return NULL;

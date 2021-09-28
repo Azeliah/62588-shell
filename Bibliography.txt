@@ -1,0 +1,12 @@
+Bibliography
+
+All the files given to us in the class.
+•	Exec.c
+•	P3.c
+•	Pipe1.c
+•	Simple_fork_p1.c
+https://www.Stackoverflow.com
+https://www.Geeksforgeeks.org
+https://www.javatpoint.com/linux-input-output-redirection
+https://man7.org/linux/man-pages/man2/dup.2.html
+https://man7.org/linux/man-pages/man3/exit.3.html

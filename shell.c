@@ -29,6 +29,9 @@ int main(void) {
         size_t input_length = strlen(input_buffer);
         input_buffer[--input_length] = '\0';
 
+        if (strcmp(input_buffer, "exit") == 0)
+            break;
+
         char *pipe_tokens[2];
 
         pipe_tokens[0] = strtok(input_buffer, "|");

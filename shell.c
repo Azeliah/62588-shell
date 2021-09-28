@@ -26,15 +26,38 @@ int main(void) {
         size_t input_length = strlen(input_buffer);
         input_buffer[--input_length] = '\0';
 
-        char **tokens = token_array(input_buffer, input_length, ' ');
+        char *pipe_tokens[2];
+
+        pipe_tokens[0] = strtok(input_buffer, "|");
+        pipe_tokens[1] = strtok(NULL, "|");
+
+        char **tokens_left = token_array(pipe_tokens[0], strlen(pipe_tokens[0]), ' ');
 
         // Fill array with tokens from input string
-        char *token = strtok(input_buffer, " ");
+        char *token = strtok(pipe_tokens[0], " ");
         for(int i = 0; token != NULL; ++i) {
-            tokens[i] = token;
+            tokens_left[i] = token;
 
             token = strtok(NULL, " ");
         }
+
+
+        char **tokens_right = NULL;
+
+        if (pipe_tokens[1]) {
+
+            tokens_right = token_array(pipe_tokens[1], strlen(pipe_tokens[1]), ' ');
+
+            token = strtok(pipe_tokens[1], " ");
+
+            for (int i = 0; token != NULL; ++i) {
+                tokens_right[i] = token;
+
+                token = strtok(NULL, " ");
+            }
+
+        }
+
 
         // Try to fork, report error and exit if it fails
         int rc = fork();
@@ -46,16 +69,53 @@ int main(void) {
         // If we are in child process, execute command
         if (rc == 0) {
 
-            // Report error, if any
-            if (execvp(tokens[0], tokens) < 0)
-                perror("execvp");
+            if (tokens_right) {
+
+                int pipefd[2];
+
+                pipe(pipefd);
+
+                rc = fork();
+                if (rc < 0) {
+                    perror("fork");
+                    return 1;
+                }
+
+                if (rc == 0) {
+                    dup2(pipefd[1], STDOUT_FILENO);
+                    close(pipefd[0]);
+
+                    if (execvp(tokens_left[0], tokens_left) < 0) {
+                        perror("execvp");
+                        return 1;
+                    }
+
+                } else {
+                    dup2(pipefd[0], STDIN_FILENO);
+                    close(pipefd[1]);
+
+                    if (execvp(tokens_right[0], tokens_right) < 0) {
+                        perror("execvp");
+                        return 1;
+                    }
+                }
+
+
+            } else {
+
+                // Report error, if any
+                if (execvp(tokens_left[0], tokens_left) < 0)
+                    perror("execvp");
+            }
 
         } else { // If we are in parent process, wait for child process to execute and continue with loop
             wait(NULL);
         }
 
-        // Free tokens array to prevent memory leak
-        free(tokens);
+        // Free token arrays to prevent memory leak
+        free(tokens_left);
+        if (tokens_right)
+            free(tokens_right);
     }
 
     return 0;

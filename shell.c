@@ -32,33 +32,8 @@ int main(void) {
         pipe_tokens[0] = strtok(input_buffer, "|");
         pipe_tokens[1] = strtok(NULL, "|");
 
-        char **tokens_left = token_array(pipe_tokens[0], strlen(pipe_tokens[0]), ' ');
-
-        // Fill array with tokens from input string
-        char *token = strtok(pipe_tokens[0], " ");
-        for(int i = 0; token != NULL; ++i) {
-            tokens_left[i] = token;
-
-            token = strtok(NULL, " ");
-        }
-
-
-        char **tokens_right = NULL;
-
-        if (pipe_tokens[1]) {
-
-            tokens_right = token_array(pipe_tokens[1], strlen(pipe_tokens[1]), ' ');
-
-            token = strtok(pipe_tokens[1], " ");
-
-            for (int i = 0; token != NULL; ++i) {
-                tokens_right[i] = token;
-
-                token = strtok(NULL, " ");
-            }
-
-        }
-
+        char **tokens_left_of_pipe = tokenize(pipe_tokens[0], ' ');
+        char **tokens_right_of_pipe = tokenize(pipe_tokens[1], ' ');
 
         // Try to fork, report error and exit if it fails
         int rc = fork();
@@ -70,14 +45,13 @@ int main(void) {
         // If we are in child process, execute command
         if (rc == 0) {
 
-            if (tokens_right) {
+            if (tokens_right_of_pipe) {
 
                 int pipefd[2];
                 if (pipe(pipefd) < 0) {
                     perror("pipe");
                     return 1;
                 }
-
 
                 rc = fork();
                 if (rc < 0) {
@@ -86,30 +60,31 @@ int main(void) {
                 }
 
                 if (rc == 0) {
-                    dup2(pipefd[1], STDOUT_FILENO);
                     close(pipefd[0]);
+                    dup2(pipefd[1], STDOUT_FILENO);
 
-                    if (execvp(tokens_left[0], tokens_left) < 0) {
-                       fprintf(stderr, "execvp: %s: %s\n", tokens_left[0], strerror(errno));
+                    if (execvp(tokens_left_of_pipe[0], tokens_left_of_pipe) < 0) {
+                       fprintf(stderr, "execvp: %s: %s\n", tokens_left_of_pipe[0], strerror(errno));
                         return 1;
                     }
 
                 } else {
-                    dup2(pipefd[0], STDIN_FILENO);
                     close(pipefd[1]);
+                    dup2(pipefd[0], STDIN_FILENO);
 
-                    if (execvp(tokens_right[0], tokens_right) < 0) {
-                       fprintf(stderr, "execvp: %s: %s\n", tokens_right[0], strerror(errno));
+                    if (execvp(tokens_right_of_pipe[0], tokens_right_of_pipe) < 0) {
+                       fprintf(stderr, "execvp: %s: %s\n", tokens_right_of_pipe[0], strerror(errno));
                        return 1;
                     }
                 }
 
-
             } else {
 
                 // Report error, if any
-                if (execvp(tokens_left[0], tokens_left) < 0)
-                    fprintf(stderr, "execvp: %s: %s\n", tokens_left[0], strerror(errno));
+                if (execvp(tokens_left_of_pipe[0], tokens_left_of_pipe) < 0) {
+                    fprintf(stderr, "execvp: %s: %s\n", tokens_left_of_pipe[0], strerror(errno));
+                    return 1;
+                }
             }
 
         } else { // If we are in parent process, wait for child process to execute and continue with loop
@@ -117,9 +92,9 @@ int main(void) {
         }
 
         // Free token arrays to prevent memory leak
-        free(tokens_left);
-        if (tokens_right)
-            free(tokens_right);
+        free(tokens_left_of_pipe);
+        if (tokens_right_of_pipe)
+            free(tokens_right_of_pipe);
     }
 
     return 0;
@@ -147,5 +122,26 @@ char **token_array(const char *input_string, size_t input_length, char delimiter
     for (int i = 0; i < token_array_size; ++i)
         tokens[i] = NULL;
 
+    return tokens;
+}
+
+char **tokenize(char *input_string, char delimiter) {
+    if (!input_string)
+        return NULL;
+
+    char **tokens = token_array(input_string, strlen(input_string), delimiter);
+
+    char delimiter_string[2];
+    delimiter_string[0] = delimiter;
+    delimiter_string[1] = '\0';
+
+    // Fill array with tokens from input string
+    char *token = strtok(input_string, delimiter_string);
+    for(int i = 0; token != NULL; ++i) {
+        tokens[i]  = token;
+
+        token = strtok(NULL, delimiter_string);
+    }
+    
     return tokens;
 }

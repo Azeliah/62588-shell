@@ -72,8 +72,11 @@ int main(void) {
             if (tokens_right) {
 
                 int pipefd[2];
+                if (pipe(pipefd) < 0) {
+                    perror("pipe");
+                    return 1;
+                }
 
-                pipe(pipefd);
 
                 rc = fork();
                 if (rc < 0) {

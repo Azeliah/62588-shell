@@ -1,20 +1,24 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #define INPUT_BUFFER_LENGTH 128
 
 int main(void) {
 
     char input_buffer[INPUT_BUFFER_LENGTH];
-    size_t input_length;
-    char *token;
 
     while(true) {
-        fgets(input_buffer, INPUT_BUFFER_LENGTH, stdin); 
+        if (!fgets(input_buffer, INPUT_BUFFER_LENGTH, stdin)) {
+            fprintf(stderr, "fgets failed\n");
+            return 1;
+        }
 
         // Remove newline from end of input string
-        input_length = strlen(input_buffer);
+        size_t input_length = strlen(input_buffer);
         input_buffer[--input_length] = '\0';
 
         // Count how many delimiters are in the input, for token array length
@@ -24,7 +28,6 @@ int main(void) {
             if (input_buffer[i] == ' ')
                 ++tokens_array_size;
         }
-        printf("Tokens array size: %d\n", tokens_array_size);
 
         /*
          * FIXME: In case there are no tokens in the input string, 
@@ -36,7 +39,7 @@ int main(void) {
         char *tokens[tokens_array_size];
         tokens[tokens_array_size - 1] = tokens[0] = NULL;
 
-        token = strtok(input_buffer, " ");
+        char *token = strtok(input_buffer, " ");
 
         for(int i = 0; token; ++i) {
             tokens[i] = token;
@@ -44,11 +47,20 @@ int main(void) {
             token = strtok(NULL, " ");
         }
 
-        for (int i = 0; i < tokens_array_size; ++i)
-            printf("tokens[%d] = %s\n", i,  tokens[i] ? tokens[i] : "NULL");
 
-        if (strcmp(input_buffer, "exit") == 0)
-            break;
+        int rc = fork();
+        if (rc < 0) {
+            perror("fork");
+            return 1;
+        }
+
+        if (rc == 0) {
+            if (execvp(tokens[0], tokens) < 0)
+                perror("execvp");
+
+        } else {
+            wait(NULL);
+        }
     }
 
     return 0;

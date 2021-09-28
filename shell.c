@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "shell.h"
 
@@ -89,7 +90,7 @@ int main(void) {
                     close(pipefd[0]);
 
                     if (execvp(tokens_left[0], tokens_left) < 0) {
-                        perror("execvp");
+                       fprintf(stderr, "execvp: %s: %s\n", tokens_left[0], strerror(errno));
                         return 1;
                     }
 
@@ -98,8 +99,8 @@ int main(void) {
                     close(pipefd[1]);
 
                     if (execvp(tokens_right[0], tokens_right) < 0) {
-                        perror("execvp");
-                        return 1;
+                       fprintf(stderr, "execvp: %s: %s\n", tokens_right[0], strerror(errno));
+                       return 1;
                     }
                 }
 
@@ -108,7 +109,7 @@ int main(void) {
 
                 // Report error, if any
                 if (execvp(tokens_left[0], tokens_left) < 0)
-                    perror("execvp");
+                    fprintf(stderr, "execvp: %s: %s\n", tokens_left[0], strerror(errno));
             }
 
         } else { // If we are in parent process, wait for child process to execute and continue with loop

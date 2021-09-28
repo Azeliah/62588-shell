@@ -5,4 +5,5 @@ set(CMAKE_C_STANDARD 99)
 
 add_executable(shell
     shell.c
+    token.c
 )

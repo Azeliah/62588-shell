@@ -6,50 +6,52 @@
 
 #include "token.h"
 
-char **tokenize(char *input_string, char delimiter) {
-    if (!input_string)
-        return NULL;
+void tokenize(char *input_string, char *delimiter, char **token_array) {
+    if (!token_array)
+        return;
 
-    // Allocate array of correct size for tokens
-    char **tokens = token_array(input_string, delimiter);
-
-    // Convert delimiter char to string
-    char delimiter_string[2];
-    delimiter_string[0] = delimiter;
-    delimiter_string[1] = '\0';
+    // If the string is NULL, set the first element in the array to NULL, to indicate no tokens
+    if (!input_string) {
+        token_array[0] = NULL;
+        return;
+    }
 
     // Fill array with tokens from input string
-    char *token = strtok(input_string, delimiter_string);
-    for(int i = 0; token != NULL; ++i) {
-        tokens[i]  = token;
-
-        token = strtok(NULL, delimiter_string);
-    }
-    
-    return tokens;
+    token_array[0] = strtok(input_string, delimiter);
+    for (int i = 0; token_array[i];)
+        token_array[++i] = strtok(NULL, delimiter);
 }
 
-char **token_array(const char *input_string, char delimiter) {
-    if (!input_string)
-        return NULL;
+int token_array_size(const char *input_string, char delimiter) {
 
-     /*
-     * Find the necessary token array size based on number of delimiters in input string.
-     * token_array_size starts at 2 because there needs to be space for the NULL terminator,
-     * and because the last token does not have delimiter.
-     */
-    int token_array_size = 2;
-    for (int i = 0, input_length = strlen(input_string); i < input_length; ++i) {
-        if (input_string[i] == ' ')
-            ++token_array_size;
+    // If the string is NULL or of length 0, the array needs to have only one element (NULL terminator)
+    if (!input_string || input_string[0] == '\0')
+        return 1;
+
+    // Skip all delimiters at the end of the string
+    int end = strlen(input_string) - 1;
+    while (input_string[end] == delimiter && end > 0)
+        --end;
+
+    // Skip all delimiters at the beginning of the string
+    int beginning = 0;
+    while (input_string[beginning] == delimiter && beginning > end)
+        ++beginning;
+ 
+    // size starts at 2, because there needs to be space for the NULL terminator,
+    // and because the last token does not have delimiter.
+    int size = 2;
+    for (int i = beginning; i < end; ++i) {
+
+        if (input_string[i] == delimiter) {
+            ++size;
+
+            // When a delimiter is found, ignore any potential duplicates
+            do {
+                ++i;
+            } while (input_string[i] == delimiter && i < end);
+        }
     }
 
-    // Dynamically allocate array of correct size
-    char **tokens = malloc(sizeof(char *) * token_array_size);
-
-    // Initialize all elements in the array to NULL to prevent undefined behavior, in case of fucky input
-    for (int i = 0; i < token_array_size; ++i)
-        tokens[i] = NULL;
-
-    return tokens;
+    return size;
 }

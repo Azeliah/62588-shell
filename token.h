@@ -1,8 +1,8 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-char **tokenize(char *input_string, char delimiter);
+void tokenize(char *input_string, char *delimiter, char **token_array);
 
-char **token_array(const char *input_string, char delimiter);
+int token_array_size(const char *input_string, char delimiter);
 
 #endif // TOKEN_H

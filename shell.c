@@ -32,12 +32,18 @@ int main(void) {
         if (strcmp(input_buffer, "exit") == 0)
             break;
 
+        // Dynamically allocate array of correct size for commands seperated by pipes
+        char *pipe_tokens[token_array_size(input_buffer, '|')];
+
         // Tokenize input string based on pipe char in case of piping
-        char **pipe_tokens = tokenize(input_buffer, '|');
+        tokenize(input_buffer, "|", pipe_tokens);
 
         // Tokenize commands on either side of pipe char
-        char **tokens_left_of_pipe = tokenize(pipe_tokens[0], ' ');
-        char **tokens_right_of_pipe = tokenize(pipe_tokens[1], ' ');
+        char *tokens_left_of_pipe[token_array_size(pipe_tokens[0], ' ')];
+        tokenize(pipe_tokens[0], " ", tokens_left_of_pipe);
+
+        char *tokens_right_of_pipe[token_array_size(pipe_tokens[1], ' ')];
+        tokenize(pipe_tokens[1], " ", tokens_right_of_pipe);
 
         // Try to fork, report error and exit if it fails
         int rc = fork();
@@ -49,8 +55,8 @@ int main(void) {
         // If we are in child process, execute command
         if (rc == 0) {
 
-            // In case the command involves piping, tokens_right_of_pipe is not NULL
-            if (tokens_right_of_pipe) {
+            // In case the command involves piping, tokens_right_of_pipe[0] is not NULL
+            if (tokens_right_of_pipe[0]) {
 
                 // Create pipe using  array of file descriptors, report error and exit if it fails
                 int pipe_file_descriptors[2];
@@ -108,12 +114,6 @@ int main(void) {
         } else { // If we are in parent process, wait for child process to finish and continue with loop
             wait(NULL);
         }
-
-        // Free token arrays to prevent memory leak
-        free(pipe_tokens);
-        free(tokens_left_of_pipe);
-        if (tokens_right_of_pipe)
-            free(tokens_right_of_pipe);
     }
 
     return 0;

@@ -26,8 +26,7 @@ int main(void) {
         }
 
         // Remove newline from end of input string
-        size_t input_length = strlen(input_buffer);
-        input_buffer[--input_length] = '\0';
+        input_buffer[strlen(input_buffer) - 1] = '\0';
 
         // If the input is "exit", quit the infinite loop
         if (strcmp(input_buffer, "exit") == 0)
@@ -60,7 +59,7 @@ int main(void) {
                     exit(1);
                 }
 
-                // Try to fork, report error adn rexit if it fails
+                // Try to fork, report error and exit if it fails
                 rc = fork();
                 if (rc < 0) {
                     perror("fork");

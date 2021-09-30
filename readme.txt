@@ -7,18 +7,18 @@
 
 ---How to install---
 In bash, type the following commands:
-"sudo apt install cmake"
-"sudo apt install make"
+`sudo apt install cmake`
+`sudo apt install make`
 
 
 ---How to build---
 Extract all the files to an empty directory and open bash in that directory.
 To build the program, type the following commands:
 
-"mkdir build"
-"cd build"
-"cmake ../"
-"make"
+`mkdir build`
+`cd build`
+`cmake ../`
+`make`
 
 The shell can now be started by calling `./shell`
 

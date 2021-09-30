@@ -35,7 +35,7 @@ The shell can now be started by calling `./shell`
 
 - Execvp: Execute a shell command, given by an array of tokenized strings. Uses the $PATH environment variable.
 - Fork: Create a child process, by duplicating the calling process.
-- Pipe: Lets you send the output from one command, as the input to another.
+- Pipe: Lets you send the output from one command, as the input to another. Pipes provide a unidirectional interprocess communication channel.
 - Dup2: Allocates a new file descriptor, that duplicates data from the specified file descriptor.
 - Wait: Wait until child process is finished.
 - Exit: Exit the child process, or program. Takes an argument which shows if the program failed, or was successful (EXIT_SUCCESS, EXIT_FAILURE).
